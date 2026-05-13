@@ -1,0 +1,1489 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Monster Arena — HALA3 Lesson 36</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --aegean:       #2b6b8a;
+    --aegean-light: #4a8eb0;
+    --aegean-glow:  rgba(43, 107, 138, 0.16);
+    --gold:         #d4a04a;
+    --gold-light:   #e7bc6e;
+    --gold-glow:    rgba(212, 160, 74, 0.20);
+    --olive:        #6b8a4a;
+    --wine:         #a04a5a;
+    --wine-glow:    rgba(160, 74, 90, 0.18);
+    --shadow-deep:  0 30px 60px -20px rgba(20, 30, 50, 0.22);
+  }
+  [data-theme="light"] {
+    --bg:          #f5ede0;
+    --bg-soft:     #eee2cc;
+    --paper:       #fcf6e8;
+    --card:        #ffffff;
+    --card-soft:   #faf2df;
+    --border:      #d4c4a0;
+    --border-soft: #e6d8b8;
+    --text:        #2a221c;
+    --text-2:      #6b5d4e;
+    --text-3:      #998a78;
+    --ink:         rgba(0,0,0,0.03);
+    --input-bg:    #fcf6e8;
+  }
+  [data-theme="dark"] {
+    --bg:          #0f1a26;
+    --bg-soft:     #16243a;
+    --paper:       #18283e;
+    --card:        #1c2e46;
+    --card-soft:   #213450;
+    --border:      #2e4868;
+    --border-soft: #2a4060;
+    --text:        #e8e4dc;
+    --text-2:      #9faec0;
+    --text-3:      #6f8090;
+    --ink:         rgba(255,255,255,0.04);
+    --input-bg:    #142235;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    transition: background 0.4s, color 0.4s;
+    overflow-x: hidden;
+  }
+  body {
+    background-image:
+      radial-gradient(circle at 10% 20%, var(--aegean-glow), transparent 50%),
+      radial-gradient(circle at 90% 85%, var(--gold-glow), transparent 50%);
+    background-attachment: fixed;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      "header  header"
+      "rail    rail"
+      "side    stage"
+      "side    controls";
+    gap: 16px;
+    max-width: 1700px;
+    margin: 0 auto;
+    padding: 22px 26px;
+    height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--border-soft);
+    gap: 24px;
+  }
+  .header-left .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--aegean);
+    font-weight: 700;
+  }
+  .title {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    font-weight: 800;
+    margin-top: 2px;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  .title em { color: var(--gold); font-style: italic; }
+  .title .sword { color: var(--aegean); font-style: normal; }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+
+  .score-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 16px 6px 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .score-pill .lbl {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 700;
+  }
+  .score-pill .o {
+    color: var(--aegean);
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+  }
+  .score-pill .m {
+    color: var(--wine);
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+  }
+  .score-pill .sep { color: var(--text-3); }
+
+  .icon-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    border-radius: 999px;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-size: 15px;
+  }
+  .icon-btn:hover {
+    color: var(--aegean);
+    border-color: var(--aegean);
+    transform: translateY(-1px);
+  }
+
+  /* PHASE RAIL */
+  .rail {
+    grid-area: rail;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  .pill {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .pill .icon { font-size: 22px; line-height: 1; }
+  .pill .label { font-size: 12.5px; font-weight: 700; color: var(--text-2); letter-spacing: 0.02em; }
+  .pill .num   { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-3); letter-spacing: 0.1em; }
+  .pill:hover { border-color: var(--aegean); }
+  .pill.done  { opacity: 0.55; }
+  .pill.done .label { color: var(--text-3); }
+  .pill.active {
+    background: linear-gradient(135deg, var(--aegean), #1f5773);
+    border-color: var(--aegean);
+    box-shadow: 0 8px 24px -6px var(--aegean-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .pill.active .label, .pill.active .num { color: #fff6e6; }
+  .pill.active .label { font-weight: 800; }
+
+  /* SIDE PANEL */
+  .side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: hidden;
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel.flex { flex: 1; min-height: 0; }
+  .panel-head {
+    padding: 12px 14px 8px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .panel-head .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .panel-head h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    margin-top: 2px;
+    font-weight: 700;
+  }
+  .panel-body { padding: 8px 6px 8px 8px; overflow-y: auto; flex: 1; }
+  .panel-body.no-pad { padding: 0; }
+
+  /* ROSTER */
+  .roster {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .roster-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .roster-row:hover { background: var(--card-soft); }
+  .roster-row.creator { background: var(--gold-glow); border-color: var(--gold); cursor: not-allowed; }
+  .roster-row .name {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .roster-row .name.dim { color: var(--text-3); }
+  .roster-row .counts {
+    display: flex;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+  .roster-row .o-count {
+    color: var(--aegean);
+    background: var(--aegean-glow);
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  .roster-row .m-count {
+    color: var(--wine);
+    background: var(--wine-glow);
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  .roster-row.creator .creator-tag {
+    font-size: 9px;
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .roster-empty {
+    padding: 16px;
+    color: var(--text-3);
+    font-size: 12.5px;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .add-row {
+    padding: 8px 10px;
+    display: flex;
+    gap: 6px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .add-row input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--border-soft);
+    color: var(--text);
+    border-radius: 7px;
+    padding: 7px 10px;
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color 0.18s;
+  }
+  .add-row input:focus { border-color: var(--aegean); }
+  .add-row button {
+    background: var(--aegean);
+    border: none;
+    color: #fff;
+    border-radius: 7px;
+    padding: 7px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .add-row button:hover { background: #1f5773; }
+
+  /* GEAR */
+  .gear-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+  .gear {
+    background: var(--card-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 8px 6px 6px;
+    text-align: center;
+    transition: all 0.18s;
+    cursor: pointer;
+  }
+  .gear:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 14px -6px var(--gold-glow); }
+  .gear .ico { font-size: 24px; line-height: 1; }
+  .gear .name {
+    font-size: 10px;
+    color: var(--text-2);
+    margin-top: 4px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* STAGE */
+  .stage {
+    grid-area: stage;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-deep);
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+  .stage::before { content: ""; position: absolute; inset: 0; background: var(--ink); pointer-events: none; }
+
+  /* Monster banner */
+  .monster-banner {
+    padding: 18px 28px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 18px;
+    background: linear-gradient(135deg, var(--gold-glow), transparent 60%);
+  }
+  .monster-banner .creator-line {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 600;
+  }
+  .monster-banner h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .monster-banner h2 .by { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text-2); font-weight: 500; font-style: italic; margin-left: 8px; }
+  .fighters {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .fighter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
+  .fighter.odysseus { border-color: var(--aegean); color: var(--aegean); }
+  .fighter.monster  { border-color: var(--wine); color: var(--wine); }
+  .fighter .role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .fighter .who {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .fighter.empty .who { color: var(--text-3); font-style: italic; font-weight: 500; }
+
+  /* Phase content area */
+  .phase-content {
+    padding: 32px 32px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .phase-content .big-icon {
+    font-size: 80px;
+    line-height: 1;
+  }
+  .phase-content h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text);
+    max-width: 800px;
+  }
+  .phase-content h1 em { color: var(--gold); font-style: italic; }
+  .phase-content h1 .acc { color: var(--aegean); font-style: normal; }
+  .phase-content p {
+    font-size: 17px;
+    color: var(--text-2);
+    line-height: 1.55;
+    max-width: 720px;
+  }
+  .phase-content .rule {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-left: 4px solid var(--gold);
+    border-radius: 8px;
+    padding: 12px 18px;
+    text-align: left;
+    font-size: 13.5px;
+    color: var(--text-2);
+    max-width: 720px;
+  }
+  .phase-content .rule strong { color: var(--text); font-family: 'Playfair Display', serif; }
+
+  .move-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    width: 100%;
+    max-width: 880px;
+    margin-top: 8px;
+  }
+  .move-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    text-align: left;
+  }
+  .move-card.odysseus { border-top: 5px solid var(--aegean); }
+  .move-card.monster  { border-top: 5px solid var(--wine); }
+  .move-card .role {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .move-card.odysseus .role { color: var(--aegean); }
+  .move-card.monster  .role { color: var(--wine); }
+  .move-card h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 4px 0 8px;
+  }
+  .move-card .who {
+    font-size: 13.5px;
+    color: var(--text-2);
+    font-style: italic;
+    margin-bottom: 10px;
+  }
+  .move-card .prompt {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* Guide Reveal */
+  .reveal-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 760px;
+  }
+  .reveal-btn {
+    background: linear-gradient(135deg, var(--gold), #b8884a);
+    color: #fffdf2;
+    border: none;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    padding: 16px 36px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 12px 28px -8px var(--gold-glow), 0 0 0 4px rgba(212, 160, 74, 0.15);
+    transition: all 0.25s;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .reveal-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 36px -8px var(--gold-glow), 0 0 0 6px rgba(212, 160, 74, 0.20); }
+  .reveal-btn .scroll { font-size: 28px; }
+
+  .guide-paper {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    box-shadow: var(--shadow-deep);
+    width: 100%;
+    transform: scale(0.96);
+    opacity: 0;
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    text-align: left;
+  }
+  .guide-paper.shown { transform: scale(1); opacity: 1; }
+  .guide-paper h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--aegean);
+  }
+  .guide-paper p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text);
+    text-align: left;
+    max-width: none;
+  }
+
+  /* VOTE PHASE */
+  .vote-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 880px;
+    margin-top: 6px;
+  }
+  .vote-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 18px;
+    padding: 28px 22px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.22s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .vote-card .pose { font-size: 64px; line-height: 1; }
+  .vote-card h4 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; }
+  .vote-card .who { font-size: 14px; color: var(--text-2); font-style: italic; }
+  .vote-card .tally {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 800;
+    margin-top: 6px;
+  }
+  .vote-card .hint {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+  .vote-card.odysseus { border-color: var(--aegean); }
+  .vote-card.odysseus h4, .vote-card.odysseus .tally { color: var(--aegean); }
+  .vote-card.monster { border-color: var(--wine); }
+  .vote-card.monster h4, .vote-card.monster .tally { color: var(--wine); }
+  .vote-card:hover { transform: translateY(-3px); box-shadow: 0 14px 28px -10px rgba(0,0,0,0.15); }
+  .vote-card.won { transform: scale(1.04); box-shadow: 0 0 0 4px currentColor; }
+  .vote-card.odysseus.won { box-shadow: 0 0 0 4px var(--aegean), 0 18px 40px -10px var(--aegean-glow); background: linear-gradient(135deg, var(--aegean-glow), transparent); }
+  .vote-card.monster.won  { box-shadow: 0 0 0 4px var(--wine),  0 18px 40px -10px var(--wine-glow);  background: linear-gradient(135deg, var(--wine-glow),  transparent); }
+
+  .winner-banner {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 800;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .winner-banner .o { color: var(--aegean); }
+  .winner-banner .m { color: var(--wine); }
+
+  /* CONTROLS */
+  .controls {
+    grid-area: controls;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 16px;
+    align-items: center;
+  }
+  .ctrl-group { display: flex; gap: 8px; align-items: center; }
+  .ctrl-group .lbl { font-size: 10px; color: var(--text-3); letter-spacing: 0.18em; text-transform: uppercase; margin-right: 4px; font-weight: 700; }
+  .btn {
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: 9px;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn:hover { border-color: var(--aegean); color: var(--aegean); }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--aegean), #1f5773);
+    color: #fff6e6;
+    border-color: var(--aegean);
+    padding: 10px 20px;
+    font-weight: 700;
+  }
+  .btn.primary:hover { transform: translateY(-1px); box-shadow: 0 8px 18px -6px var(--aegean-glow); color: #fff6e6; }
+  .btn.gold {
+    background: linear-gradient(135deg, var(--gold), #b8884a);
+    color: #fffdf2;
+    border-color: var(--gold);
+    font-weight: 700;
+  }
+  .btn.gold:hover { color: #fffdf2; transform: translateY(-1px); box-shadow: 0 8px 18px -6px var(--gold-glow); }
+  .btn.ghost { background: transparent; }
+
+  .creator-select {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .pick-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.18s;
+  }
+  .pick-btn:hover { border-color: var(--aegean); color: var(--aegean); }
+
+  /* MODAL */
+  .modal-back { position: fixed; inset: 0; background: rgba(20,30,50,0.5); backdrop-filter: blur(6px); display: none; place-items: center; z-index: 50; padding: 20px; }
+  .modal-back.open { display: grid; }
+  .modal { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; max-width: 640px; width: 100%; box-shadow: 0 50px 100px -30px rgba(0,0,0,0.5); }
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 6px; }
+  .modal p.help { color: var(--text-2); font-size: 13.5px; margin-bottom: 16px; line-height: 1.55; }
+  .modal label.field { display: block; margin-bottom: 12px; }
+  .modal label.field .lbl { display: block; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-3); margin-bottom: 5px; font-weight: 700; }
+  .modal input, .modal textarea {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 9px;
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.18s;
+  }
+  .modal textarea { min-height: 70px; line-height: 1.5; }
+  .modal input:focus, .modal textarea:focus { border-color: var(--aegean); }
+  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .app { grid-template-columns: 220px 1fr; }
+    .title { font-size: 24px; }
+    .phase-content h1 { font-size: 32px; }
+    .phase-content .big-icon { font-size: 60px; }
+    .rail { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 800px) {
+    .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto 1fr auto;
+      grid-template-areas:
+        "header"
+        "rail"
+        "side"
+        "stage"
+        "controls";
+      height: auto;
+    }
+    .move-grid, .vote-stage { grid-template-columns: 1fr; }
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--aegean); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="header">
+    <div class="header-left">
+      <div class="eyebrow">Honors Language Arts 3 · Lesson 36</div>
+      <h1 class="title" id="title"></h1>
+    </div>
+    <div class="header-right">
+      <div class="score-pill">
+        <span class="lbl">Today</span>
+        <span class="o" id="scoreO">0</span>
+        <span class="sep">–</span>
+        <span class="m" id="scoreM">0</span>
+        <span class="lbl" style="margin-left:6px;">O / M</span>
+      </div>
+      <button class="icon-btn" id="monsterBtn" title="Set current monster">🐉</button>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme">☼</button>
+    </div>
+  </header>
+
+  <nav class="rail" id="rail"></nav>
+
+  <aside class="side">
+
+    <div class="panel flex">
+      <div class="panel-head">
+        <div class="eyebrow">Class Roster</div>
+        <h3>Who plays each round</h3>
+      </div>
+      <div class="panel-body" id="rosterBody"></div>
+      <div class="add-row">
+        <input id="rosterName" placeholder="Add student…" />
+        <button id="rosterAdd" title="Add student">+</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="eyebrow">Odysseus's Gear</div>
+        <h3>Tools at his disposal</h3>
+      </div>
+      <div class="gear-grid">
+        <div class="gear"><div class="ico">⚔️</div><div class="name">Sword</div></div>
+        <div class="gear"><div class="ico">🛡️</div><div class="name">Shield</div></div>
+        <div class="gear"><div class="ico">🧥</div><div class="name">Cloak</div></div>
+        <div class="gear"><div class="ico">🪖</div><div class="name">Armor</div></div>
+        <div class="gear"><div class="ico">🪢</div><div class="name">Rope</div></div>
+        <div class="gear"><div class="ico">🔥</div><div class="name">Match</div></div>
+        <div class="gear"><div class="ico">🪨</div><div class="name">Rock</div></div>
+        <div class="gear"><div class="ico">🎶</div><div class="name">Lute</div></div>
+        <div class="gear"><div class="ico">🧶</div><div class="name">Bracelet</div></div>
+        <div class="gear"><div class="ico">🪙</div><div class="name">3 Gold</div></div>
+        <div class="gear"><div class="ico">😄</div><div class="name">Jokes</div></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="stage">
+
+    <div class="monster-banner">
+      <div>
+        <div class="creator-line" id="creatorLine">No monster up yet — pick a creator below</div>
+        <h2 id="monsterName">Monster Arena</h2>
+      </div>
+      <div class="fighters">
+        <div class="fighter odysseus empty" id="fighterO">
+          <span>⚔️</span>
+          <div>
+            <div class="role">Odysseus</div>
+            <div class="who">— not picked —</div>
+          </div>
+        </div>
+        <div class="fighter monster empty" id="fighterM">
+          <span>🐉</span>
+          <div>
+            <div class="role">Monster</div>
+            <div class="who">— not picked —</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-content" id="phaseContent"></div>
+
+  </main>
+
+  <footer class="controls">
+    <div class="ctrl-group">
+      <span class="lbl">Cast</span>
+      <button class="pick-btn" id="pickO">🎲 Pick Odysseus</button>
+      <button class="pick-btn" id="pickM">🎲 Pick Monster</button>
+      <button class="pick-btn" id="clearCast" title="Clear current fighters">✕</button>
+    </div>
+
+    <div class="ctrl-group" style="justify-content: center;">
+      <button class="btn ghost" id="prevBtn">◀ Prev</button>
+      <button class="btn primary" id="nextBtn">Next ▶</button>
+      <button class="btn gold" id="nextMonsterBtn">🐉 Next Monster</button>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="lbl">Reset</span>
+      <button class="btn ghost" id="resetRound">↺ Round</button>
+      <button class="btn ghost" id="resetAll" title="Reset full day">↺ All</button>
+    </div>
+  </footer>
+
+</div>
+
+<!-- MONSTER MODAL -->
+<div class="modal-back" id="monsterModal">
+  <div class="modal">
+    <h2>Set the current monster</h2>
+    <p class="help">Pick the creator (the student presenting). They will be excluded from playing Odysseus or the monster this round. Optionally paste the prototype text to display when you reveal the guide.</p>
+    <label class="field">
+      <span class="lbl">Creator</span>
+      <select id="creatorSelect" style="width:100%; background:var(--input-bg); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:10px 12px; font-size:14px;"></select>
+    </label>
+    <label class="field">
+      <span class="lbl">Monster name</span>
+      <input id="monsterNameInput" placeholder="e.g. The Phorcyne" />
+    </label>
+    <label class="field">
+      <span class="lbl">Quick fact (one or two sentences)</span>
+      <textarea id="monsterFact" placeholder="Greek origin · inspired by Hydra · scales tougher than rock"></textarea>
+    </label>
+    <label class="field">
+      <span class="lbl">How-to Guide text (revealed on the big button)</span>
+      <textarea id="monsterGuide" placeholder="Optional — paste the student's how-to guide so it appears when Odysseus reads it"></textarea>
+    </label>
+    <div class="actions">
+      <button class="btn ghost" id="cancelMonster">Cancel</button>
+      <button class="btn primary" id="saveMonster">Start the round</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   Topic + ornaments
+============================================================ */
+(function setTitle() {
+  const t = document.getElementById('title');
+  const sword = document.createElement('span'); sword.className = 'sword'; sword.textContent = 'Battling ';
+  const em = document.createElement('em'); em.textContent = 'Odysseus';
+  t.appendChild(sword);
+  t.appendChild(em);
+  t.appendChild(document.createTextNode(' — Monster Arena'));
+})();
+
+/* ============================================================
+   Constants
+============================================================ */
+const PHASES = [
+  { key: 'intro',   icon: '🎤', label: 'Hype',           num: '01' },
+  { key: 'places',  icon: '📍', label: 'Places',         num: '02' },
+  { key: 'r1',      icon: '⚔️', label: 'Round 1',        num: '03' },
+  { key: 'r2',      icon: '⚔️', label: 'Round 2',        num: '04' },
+  { key: 'reveal',  icon: '📜', label: 'Guide Reveal',   num: '05' },
+  { key: 'r3',      icon: '⚔️', label: 'Round 3',        num: '06' },
+  { key: 'vote',    icon: '🗳️', label: 'Vote',           num: '07' },
+];
+
+const DEFAULT_ROSTER = []; // start empty
+
+/* ============================================================
+   State
+============================================================ */
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+function load(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch { return fallback; }
+}
+
+const state = {
+  phaseIdx: 0,
+  roster: load('arena.roster', DEFAULT_ROSTER), // [{ name, oCount, mCount }]
+  monster: load('arena.monster', { creator: null, name: '', fact: '', guide: '' }),
+  cast: load('arena.cast', { odysseus: null, monster: null }),
+  votes: load('arena.votes', { o: 0, m: 0 }),
+  scoreboard: load('arena.scoreboard', { o: 0, m: 0 }),
+  guideRevealed: false,
+};
+
+/* ============================================================
+   DOM helpers
+============================================================ */
+function el(tag, opts) {
+  const node = document.createElement(tag);
+  if (!opts) return node;
+  if (opts.cls) node.className = opts.cls;
+  if (opts.text != null) node.textContent = opts.text;
+  if (opts.attrs) for (const k in opts.attrs) node.setAttribute(k, opts.attrs[k]);
+  if (opts.style) for (const k in opts.style) node.style[k] = opts.style[k];
+  if (opts.on) for (const k in opts.on) node.addEventListener(k, opts.on[k]);
+  if (opts.children) opts.children.forEach(c => c && node.appendChild(c));
+  return node;
+}
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+/* ============================================================
+   Roster
+============================================================ */
+function ensureCounts() {
+  state.roster.forEach(r => {
+    if (typeof r.oCount !== 'number') r.oCount = 0;
+    if (typeof r.mCount !== 'number') r.mCount = 0;
+  });
+}
+function addStudent(name) {
+  name = (name || '').trim();
+  if (!name) return;
+  if (state.roster.some(r => r.name.toLowerCase() === name.toLowerCase())) return;
+  state.roster.push({ name, oCount: 0, mCount: 0 });
+  save('arena.roster', state.roster);
+  renderRoster(); renderCreatorSelect();
+}
+function removeStudent(name) {
+  state.roster = state.roster.filter(r => r.name !== name);
+  save('arena.roster', state.roster);
+  renderRoster(); renderCreatorSelect();
+}
+
+function renderRoster() {
+  const body = document.getElementById('rosterBody');
+  clear(body);
+  ensureCounts();
+
+  if (state.roster.length === 0) {
+    body.appendChild(el('div', { cls: 'roster-empty', text: 'Add students to get started — fairer role rotation kicks in once they\'re in.' }));
+    return;
+  }
+
+  // sort: creator first, then by total plays ascending (least-played highlighted near top)
+  const creator = state.monster.creator;
+  const sorted = [...state.roster].sort((a, b) => {
+    if (a.name === creator) return -1;
+    if (b.name === creator) return 1;
+    return (a.oCount + a.mCount) - (b.oCount + b.mCount);
+  });
+
+  const wrap = el('div', { cls: 'roster' });
+  sorted.forEach(r => {
+    const isCreator = r.name === creator;
+    const row = el('div', {
+      cls: 'roster-row' + (isCreator ? ' creator' : ''),
+      attrs: { title: isCreator ? 'This is the monster\'s creator — they sit this round out' : 'Click to remove' },
+      on: {
+        dblclick: () => { if (!isCreator && confirm('Remove ' + r.name + ' from the roster?')) removeStudent(r.name); }
+      },
+      children: [
+        el('div', { cls: 'name' + (isCreator ? ' dim' : ''), text: r.name }),
+        isCreator ? el('div', { cls: 'creator-tag', text: 'CREATOR' }) : null,
+        el('div', { cls: 'counts', children: [
+          el('span', { cls: 'o-count', text: 'O ' + r.oCount, attrs: { title: 'Times played Odysseus' } }),
+          el('span', { cls: 'm-count', text: 'M ' + r.mCount, attrs: { title: 'Times played a monster' } }),
+        ]}),
+      ]
+    });
+    wrap.appendChild(row);
+  });
+  body.appendChild(wrap);
+}
+
+/* ============================================================
+   Pick fighters
+============================================================ */
+function eligible() {
+  return state.roster.filter(r => r.name !== state.monster.creator);
+}
+function pickLeastPlayedFor(role, excludeName) {
+  const pool = eligible().filter(r => r.name !== excludeName);
+  if (pool.length === 0) return null;
+  const counts = pool.map(r => role === 'odysseus' ? r.oCount : r.mCount);
+  const min = Math.min(...counts);
+  const lowest = pool.filter(r => (role === 'odysseus' ? r.oCount : r.mCount) === min);
+  return lowest[Math.floor(Math.random() * lowest.length)];
+}
+function pickOdysseus() {
+  if (!state.monster.creator) { alert('Pick a monster creator first (🐉 in the header).'); return; }
+  const r = pickLeastPlayedFor('odysseus', state.cast.monster);
+  if (!r) { alert('No one available to play Odysseus right now.'); return; }
+  state.cast.odysseus = r.name;
+  save('arena.cast', state.cast);
+  renderFighters();
+}
+function pickMonster() {
+  if (!state.monster.creator) { alert('Pick a monster creator first (🐉 in the header).'); return; }
+  const r = pickLeastPlayedFor('monster', state.cast.odysseus);
+  if (!r) { alert('No one available to play the monster right now.'); return; }
+  state.cast.monster = r.name;
+  save('arena.cast', state.cast);
+  renderFighters();
+}
+function commitPlayCounts() {
+  // increment counts when both fighters are picked, only once per round
+  if (!state.cast.odysseus || !state.cast.monster) return;
+  if (state.cast.committed) return;
+  const o = state.roster.find(r => r.name === state.cast.odysseus);
+  const m = state.roster.find(r => r.name === state.cast.monster);
+  if (o) o.oCount += 1;
+  if (m) m.mCount += 1;
+  state.cast.committed = true;
+  save('arena.cast', state.cast);
+  save('arena.roster', state.roster);
+  renderRoster();
+}
+
+/* ============================================================
+   Render fighter chips + monster banner
+============================================================ */
+function renderFighters() {
+  const fO = document.getElementById('fighterO');
+  const fM = document.getElementById('fighterM');
+
+  function setFighter(node, name, fallback) {
+    clear(node);
+    const cls = node.classList.contains('odysseus') ? 'odysseus' : 'monster';
+    node.className = 'fighter ' + cls + (name ? '' : ' empty');
+    const ico = cls === 'odysseus' ? '⚔️' : '🐉';
+    node.appendChild(el('span', { text: ico }));
+    const inner = el('div', {});
+    inner.appendChild(el('div', { cls: 'role', text: cls === 'odysseus' ? 'Odysseus' : 'Monster' }));
+    inner.appendChild(el('div', { cls: 'who', text: name || fallback }));
+    node.appendChild(inner);
+  }
+
+  setFighter(fO, state.cast.odysseus, '— not picked —');
+  setFighter(fM, state.cast.monster, '— not picked —');
+}
+
+function renderMonsterBanner() {
+  const line = document.getElementById('creatorLine');
+  const name = document.getElementById('monsterName');
+  if (state.monster.creator) {
+    clear(line);
+    line.appendChild(document.createTextNode('Presented by '));
+    const c = el('strong'); c.textContent = state.monster.creator; line.appendChild(c);
+    if (state.monster.fact) {
+      line.appendChild(document.createTextNode(' · ' + state.monster.fact));
+    }
+    clear(name);
+    name.appendChild(document.createTextNode(state.monster.name || 'Unnamed Monster'));
+  } else {
+    line.textContent = 'No monster up yet — set one with 🐉 in the header';
+    name.textContent = 'Monster Arena';
+  }
+}
+
+/* ============================================================
+   Phase rail
+============================================================ */
+function renderRail() {
+  const rail = document.getElementById('rail');
+  clear(rail);
+  PHASES.forEach((p, i) => {
+    const cls = 'pill' + (i === state.phaseIdx ? ' active' : (i < state.phaseIdx ? ' done' : ''));
+    rail.appendChild(el('div', {
+      cls,
+      on: { click: () => goToPhase(i) },
+      children: [
+        el('div', { cls: 'icon', text: p.icon }),
+        el('div', { cls: 'label', text: p.label }),
+        el('div', { cls: 'num', text: p.num }),
+      ]
+    }));
+  });
+}
+
+function goToPhase(i) {
+  state.phaseIdx = Math.max(0, Math.min(PHASES.length - 1, i));
+  if (state.phaseIdx === 5 || state.phaseIdx === 4) state.guideRevealed = state.guideRevealed; // preserve
+  if (state.phaseIdx > 1) commitPlayCounts();
+  renderRail();
+  renderPhase();
+}
+
+/* ============================================================
+   Phase rendering
+============================================================ */
+function renderPhase() {
+  const content = document.getElementById('phaseContent');
+  clear(content);
+  const p = PHASES[state.phaseIdx];
+  switch (p.key) {
+    case 'intro':  return renderIntro(content);
+    case 'places': return renderPlaces(content);
+    case 'r1':     return renderRound(content, 1);
+    case 'r2':     return renderRound(content, 2);
+    case 'reveal': return renderReveal(content);
+    case 'r3':     return renderRound(content, 3);
+    case 'vote':   return renderVote(content);
+  }
+}
+
+function renderIntro(c) {
+  c.appendChild(el('div', { cls: 'big-icon', text: '🎤' }));
+  const h = el('h1');
+  if (state.monster.creator) {
+    h.appendChild(document.createTextNode("It's "));
+    const em = el('em'); em.textContent = state.monster.creator + "'s"; h.appendChild(em);
+    h.appendChild(document.createTextNode(' turn! '));
+    h.appendChild(el('br'));
+    h.appendChild(document.createTextNode('Introduce your monster.'));
+  } else {
+    h.appendChild(document.createTextNode('Set up the next monster'));
+  }
+  c.appendChild(h);
+  c.appendChild(el('p', { text: 'Tell us your monster\'s name and one or two facts. Use your best hype skills to get the crowd ready for battle!' }));
+  c.appendChild(el('div', {
+    cls: 'rule',
+    children: [
+      el('strong', { text: 'Example: ' }),
+      el('span', { text: '"Odysseus and spectators, meet the Labyrinthian Hydra! This monster is of Greek origin and is inspired by the Hydra and Minotaur — and this beast\'s scale-covered muscles are tougher than rock!"' }),
+    ]
+  }));
+}
+
+function renderPlaces(c) {
+  c.appendChild(el('div', { cls: 'big-icon', text: '📍' }));
+  const h = el('h1');
+  h.appendChild(document.createTextNode('Take your '));
+  const em = el('em'); em.textContent = 'places'; h.appendChild(em);
+  h.appendChild(document.createTextNode('.'));
+  c.appendChild(h);
+  c.appendChild(el('p', { text: 'Fighters stand face-to-face in the monster\'s environment. Odysseus has his gear (see the side panel). Spectators get ready to vote!' }));
+
+  c.appendChild(el('div', {
+    cls: 'rule',
+    children: [
+      el('strong', { text: 'Rules: ' }),
+      el('span', { text: 'Moves are actions, not results. Moves must match the prototype. No god-magic. No killing — Homer needs these monsters alive for his next book.' }),
+    ]
+  }));
+}
+
+function renderRound(c, n) {
+  c.appendChild(el('div', { cls: 'big-icon', text: '⚔️' }));
+  const h = el('h1');
+  if (n === 3) {
+    h.appendChild(el('span', { cls: 'acc', text: 'Final ' }));
+    h.appendChild(document.createTextNode('Round'));
+  } else {
+    h.appendChild(document.createTextNode('Round '));
+    const em = el('em'); em.textContent = n.toString(); h.appendChild(em);
+  }
+  c.appendChild(h);
+
+  const grid = el('div', { cls: 'move-grid' });
+  grid.appendChild(el('div', {
+    cls: 'move-card odysseus',
+    children: [
+      el('div', { cls: 'role', text: '⚔️  ODYSSEUS' }),
+      el('h4', { text: 'Move ' + n }),
+      el('div', { cls: 'who', text: state.cast.odysseus || '— not picked —' }),
+      el('div', { cls: 'prompt', text: n === 3 ? 'Final move. Use what the guide just told you about the monster.' : 'Make a move using your gear or your wits. Action, not result.' }),
+    ]
+  }));
+  grid.appendChild(el('div', {
+    cls: 'move-card monster',
+    children: [
+      el('div', { cls: 'role', text: '🐉  MONSTER' }),
+      el('h4', { text: 'Response ' + n }),
+      el('div', { cls: 'who', text: state.cast.monster || '— not picked —' }),
+      el('div', { cls: 'prompt', text: 'Respond using only what the prototype says you can do.' }),
+    ]
+  }));
+  c.appendChild(grid);
+
+  c.appendChild(el('div', {
+    cls: 'rule',
+    children: [
+      el('strong', { text: 'Disputed move? ' }),
+      el('span', { text: 'Spectators vote thumbs up or down — majority wins.' }),
+    ]
+  }));
+}
+
+function renderReveal(c) {
+  const inner = el('div', { cls: 'reveal-stage' });
+
+  if (!state.guideRevealed) {
+    inner.appendChild(el('div', { cls: 'big-icon', text: '📜' }));
+    const h = el('h1');
+    h.appendChild(document.createTextNode('Odysseus reads the '));
+    const em = el('em'); em.textContent = 'How-to Guide'; h.appendChild(em);
+    h.appendChild(document.createTextNode('!'));
+    inner.appendChild(h);
+    inner.appendChild(el('p', { text: 'After two rounds of guessing, the secret is revealed. ' + (state.cast.odysseus || 'Odysseus') + ', read the guide aloud — and use what you learn for the final move.' }));
+    const btn = el('button', {
+      cls: 'reveal-btn',
+      children: [el('span', { cls: 'scroll', text: '📜' }), el('span', { text: 'Reveal the Guide' })],
+      on: { click: () => { state.guideRevealed = true; renderPhase(); } }
+    });
+    inner.appendChild(btn);
+  } else {
+    const h = el('h1', {});
+    h.appendChild(document.createTextNode('The '));
+    const em = el('em'); em.textContent = 'Guide'; h.appendChild(em);
+    h.appendChild(document.createTextNode(' is revealed.'));
+    inner.appendChild(h);
+    inner.appendChild(el('p', { text: 'Read it aloud. Then take it into the final round.' }));
+
+    const paper = el('div', { cls: 'guide-paper shown' });
+    paper.appendChild(el('h4', { text: state.monster.name ? ('How to defeat ' + state.monster.name) : 'How to defeat this monster' }));
+    if (state.monster.guide && state.monster.guide.trim()) {
+      // Render paragraphs
+      const paragraphs = state.monster.guide.split(/\n\s*\n/);
+      paragraphs.forEach(par => {
+        if (par.trim()) paper.appendChild(el('p', { text: par.trim() }));
+      });
+    } else {
+      paper.appendChild(el('p', { text: 'No guide text was pasted. Read the student\'s how-to guide aloud from the workbook or doc cam.' }));
+    }
+    inner.appendChild(paper);
+  }
+
+  c.appendChild(inner);
+}
+
+function renderVote(c) {
+  c.appendChild(el('div', { cls: 'big-icon', text: '🗳️' }));
+  const h = el('h1');
+  h.appendChild(document.createTextNode('Who won this '));
+  const em = el('em'); em.textContent = 'battle'; h.appendChild(em);
+  h.appendChild(document.createTextNode('?'));
+  c.appendChild(h);
+  c.appendChild(el('p', { text: 'Spectators: Arms Up means Odysseus won. Arms Crossed means the Monster won. Tap each card to record the count, or just click the winner once.' }));
+
+  const stage = el('div', { cls: 'vote-stage' });
+
+  const oWon = state.votes.o > state.votes.m && (state.votes.o + state.votes.m) > 0;
+  const mWon = state.votes.m > state.votes.o && (state.votes.o + state.votes.m) > 0;
+
+  stage.appendChild(el('div', {
+    cls: 'vote-card odysseus' + (oWon ? ' won' : ''),
+    on: {
+      click: (e) => {
+        state.votes.o = Math.max(0, state.votes.o + (e.shiftKey ? -1 : 1));
+        save('arena.votes', state.votes);
+        renderPhase();
+      }
+    },
+    children: [
+      el('div', { cls: 'pose', text: '🙌' }),
+      el('h4', { text: 'Arms Up' }),
+      el('div', { cls: 'who', text: 'Odysseus won' }),
+      el('div', { cls: 'tally', text: String(state.votes.o) }),
+      el('div', { cls: 'hint', text: 'Tap to add · shift-tap to remove' }),
+    ]
+  }));
+  stage.appendChild(el('div', {
+    cls: 'vote-card monster' + (mWon ? ' won' : ''),
+    on: {
+      click: (e) => {
+        state.votes.m = Math.max(0, state.votes.m + (e.shiftKey ? -1 : 1));
+        save('arena.votes', state.votes);
+        renderPhase();
+      }
+    },
+    children: [
+      el('div', { cls: 'pose', text: '🤞' }),
+      el('h4', { text: 'Arms Crossed' }),
+      el('div', { cls: 'who', text: state.monster.name ? (state.monster.name + ' won') : 'Monster won' }),
+      el('div', { cls: 'tally', text: String(state.votes.m) }),
+      el('div', { cls: 'hint', text: 'Tap to add · shift-tap to remove' }),
+    ]
+  }));
+
+  c.appendChild(stage);
+
+  if (oWon || mWon) {
+    const banner = el('div', { cls: 'winner-banner' });
+    if (oWon) {
+      banner.appendChild(el('span', { cls: 'o', text: '⚔️  Odysseus prevails!' }));
+    } else {
+      banner.appendChild(el('span', { cls: 'm', text: '🐉  ' + (state.monster.name || 'The monster') + ' prevails!' }));
+    }
+    c.appendChild(banner);
+  }
+}
+
+/* ============================================================
+   Next monster flow
+============================================================ */
+function nextMonster() {
+  // Lock in scoreboard from current vote if it had a result
+  const { o, m } = state.votes;
+  if (o > m)      state.scoreboard.o += 1;
+  else if (m > o) state.scoreboard.m += 1;
+  save('arena.scoreboard', state.scoreboard);
+  renderScoreboard();
+
+  // Reset round
+  state.monster = { creator: null, name: '', fact: '', guide: '' };
+  state.cast = { odysseus: null, monster: null };
+  state.votes = { o: 0, m: 0 };
+  state.guideRevealed = false;
+  state.phaseIdx = 0;
+  save('arena.monster', state.monster);
+  save('arena.cast', state.cast);
+  save('arena.votes', state.votes);
+  renderRail(); renderPhase(); renderMonsterBanner(); renderFighters(); renderRoster();
+  openMonsterModal();
+}
+
+function renderScoreboard() {
+  document.getElementById('scoreO').textContent = state.scoreboard.o;
+  document.getElementById('scoreM').textContent = state.scoreboard.m;
+}
+
+/* ============================================================
+   Monster modal
+============================================================ */
+function renderCreatorSelect() {
+  const sel = document.getElementById('creatorSelect');
+  clear(sel);
+  sel.appendChild(el('option', { attrs: { value: '' }, text: '— pick a student —' }));
+  state.roster.forEach(r => {
+    sel.appendChild(el('option', { attrs: { value: r.name }, text: r.name }));
+  });
+  if (state.monster.creator) sel.value = state.monster.creator;
+}
+function openMonsterModal() {
+  renderCreatorSelect();
+  document.getElementById('monsterNameInput').value = state.monster.name || '';
+  document.getElementById('monsterFact').value = state.monster.fact || '';
+  document.getElementById('monsterGuide').value = state.monster.guide || '';
+  document.getElementById('monsterModal').classList.add('open');
+}
+function closeMonsterModal() {
+  document.getElementById('monsterModal').classList.remove('open');
+}
+function saveMonster() {
+  const creator = document.getElementById('creatorSelect').value;
+  const name = document.getElementById('monsterNameInput').value.trim();
+  const fact = document.getElementById('monsterFact').value.trim();
+  const guide = document.getElementById('monsterGuide').value.trim();
+  if (!creator) { alert('Pick a creator first.'); return; }
+  state.monster = { creator, name, fact, guide };
+  state.cast = { odysseus: null, monster: null };
+  state.guideRevealed = false;
+  state.phaseIdx = 0;
+  save('arena.monster', state.monster);
+  save('arena.cast', state.cast);
+  closeMonsterModal();
+  renderMonsterBanner(); renderFighters(); renderRail(); renderPhase(); renderRoster();
+}
+
+/* ============================================================
+   Theme
+============================================================ */
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  document.getElementById('themeBtn').textContent = next === 'light' ? '☼' : '☾';
+  save('arena.theme', next);
+}
+const savedTheme = load('arena.theme', 'light');
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('themeBtn').textContent = savedTheme === 'light' ? '☼' : '☾';
+
+/* ============================================================
+   Bindings
+============================================================ */
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+document.getElementById('monsterBtn').addEventListener('click', openMonsterModal);
+document.getElementById('cancelMonster').addEventListener('click', closeMonsterModal);
+document.getElementById('saveMonster').addEventListener('click', saveMonster);
+
+document.getElementById('rosterAdd').addEventListener('click', () => {
+  const inp = document.getElementById('rosterName');
+  addStudent(inp.value);
+  inp.value = '';
+  inp.focus();
+});
+document.getElementById('rosterName').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { addStudent(e.target.value); e.target.value = ''; }
+});
+
+document.getElementById('pickO').addEventListener('click', pickOdysseus);
+document.getElementById('pickM').addEventListener('click', pickMonster);
+document.getElementById('clearCast').addEventListener('click', () => {
+  state.cast = { odysseus: null, monster: null };
+  save('arena.cast', state.cast);
+  renderFighters();
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => goToPhase(state.phaseIdx - 1));
+document.getElementById('nextBtn').addEventListener('click', () => goToPhase(state.phaseIdx + 1));
+document.getElementById('nextMonsterBtn').addEventListener('click', () => {
+  if (!confirm('Move on to the next monster? This locks in the current vote and resets the round.')) return;
+  nextMonster();
+});
+
+document.getElementById('resetRound').addEventListener('click', () => {
+  if (!confirm('Reset this round? Cast, votes, and phase will clear (scoreboard kept).')) return;
+  state.cast = { odysseus: null, monster: null };
+  state.votes = { o: 0, m: 0 };
+  state.guideRevealed = false;
+  state.phaseIdx = 0;
+  save('arena.cast', state.cast);
+  save('arena.votes', state.votes);
+  renderFighters(); renderRail(); renderPhase();
+});
+document.getElementById('resetAll').addEventListener('click', () => {
+  if (!confirm('Reset the entire day? Scoreboard and play counts will all clear.')) return;
+  state.scoreboard = { o: 0, m: 0 };
+  state.cast = { odysseus: null, monster: null };
+  state.votes = { o: 0, m: 0 };
+  state.guideRevealed = false;
+  state.phaseIdx = 0;
+  state.monster = { creator: null, name: '', fact: '', guide: '' };
+  state.roster.forEach(r => { r.oCount = 0; r.mCount = 0; });
+  save('arena.scoreboard', state.scoreboard);
+  save('arena.cast', state.cast);
+  save('arena.votes', state.votes);
+  save('arena.monster', state.monster);
+  save('arena.roster', state.roster);
+  renderAll();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'ArrowRight') goToPhase(state.phaseIdx + 1);
+  else if (e.code === 'ArrowLeft') goToPhase(state.phaseIdx - 1);
+  else if (e.code === 'KeyO') pickOdysseus();
+  else if (e.code === 'KeyM') pickMonster();
+});
+
+/* ============================================================
+   Init
+============================================================ */
+function renderAll() {
+  renderRail();
+  renderRoster();
+  renderMonsterBanner();
+  renderFighters();
+  renderPhase();
+  renderScoreboard();
+}
+ensureCounts();
+renderAll();
+</script>
+</body>
+</html>
